@@ -1,0 +1,2064 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>DCL | Seminário Interativo</title>
+
+<style>
+
+/* =====================================
+   CONFIGURAÇÕES GERAIS
+===================================== */
+
+:root {
+    --fundo: #100b25;
+    --roxo: #8b5cf6;
+    --rosa: #ec4899;
+    --amarelo: #fde68a;
+    --verde: #4ade80;
+    --texto: #f8fafc;
+    --suave: #cbd5e1;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: var(--fundo);
+    color: var(--texto);
+}
+
+button {
+    font: inherit;
+    cursor: pointer;
+}
+
+button:focus-visible {
+    outline: 3px solid var(--amarelo);
+    outline-offset: 3px;
+}
+
+/* =====================================
+   FUNDO ANIMADO
+===================================== */
+
+.fundo {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    overflow: hidden;
+    pointer-events: none;
+
+    background: linear-gradient(
+        130deg,
+        #100b25,
+        #251249,
+        #140e35,
+        #350e45
+    );
+
+    background-size: 300% 300%;
+    animation: fundoMover 16s ease infinite;
+}
+
+@keyframes fundoMover {
+    0%, 100% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+.orbe {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: .25;
+    animation: flutuar 12s ease-in-out infinite alternate;
+}
+
+.orbe.um {
+    width: 420px;
+    height: 420px;
+    background: #9333ea;
+    top: -170px;
+    left: -120px;
+}
+
+.orbe.dois {
+    width: 350px;
+    height: 350px;
+    background: #db2777;
+    bottom: -150px;
+    right: -100px;
+    animation-delay: -5s;
+}
+
+.orbe.tres {
+    width: 250px;
+    height: 250px;
+    background: #2563eb;
+    top: 35%;
+    right: 20%;
+    opacity: .12;
+    animation-delay: -8s;
+}
+
+@keyframes flutuar {
+    from {
+        transform: translate(0, 0) scale(1);
+    }
+
+    to {
+        transform: translate(70px, 50px) scale(1.15);
+    }
+}
+
+/* PARTÍCULAS */
+
+.particulas {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.particula {
+    position: absolute;
+    bottom: -20px;
+
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+
+    background: #c4b5fd;
+    box-shadow: 0 0 12px #a78bfa;
+
+    animation: subirParticula linear infinite;
+}
+
+@keyframes subirParticula {
+    0% {
+        transform: translateY(0);
+        opacity: 0;
+    }
+
+    15%, 85% {
+        opacity: .65;
+    }
+
+    100% {
+        transform: translateY(-110vh);
+        opacity: 0;
+    }
+}
+
+/* =====================================
+   ESTRUTURA DOS SLIDES
+===================================== */
+
+.apresentacao {
+    position: relative;
+    width: 100%;
+    height: 100dvh;
+    overflow: hidden;
+}
+
+.slide {
+    position: absolute;
+    inset: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 28px 7% 105px;
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+
+    transform: translateX(90px) scale(.97);
+
+    transition:
+        opacity .85s ease,
+        transform .85s cubic-bezier(.22, 1, .36, 1),
+        visibility 0s linear .85s;
+}
+
+.slide.ativo {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+
+    transform: translateX(0) scale(1);
+
+    transition:
+        opacity .85s ease,
+        transform .85s cubic-bezier(.22, 1, .36, 1),
+        visibility 0s;
+}
+
+.slide.saindo-esquerda {
+    opacity: 0;
+    visibility: visible;
+    pointer-events: none;
+    transform: translateX(-110px) scale(.96);
+}
+
+.slide.saindo-direita {
+    opacity: 0;
+    visibility: visible;
+    pointer-events: none;
+    transform: translateX(110px) scale(.96);
+}
+
+.slide.entrando-direita {
+    opacity: 0;
+    visibility: visible;
+    transform: translateX(110px) scale(.96);
+}
+
+.slide.entrando-esquerda {
+    opacity: 0;
+    visibility: visible;
+    transform: translateX(-110px) scale(.96);
+}
+
+.conteudo {
+    width: 100%;
+    max-width: 1050px;
+    max-height: 100%;
+    overflow-y: auto;
+
+    scrollbar-width: none;
+}
+
+.conteudo::-webkit-scrollbar {
+    display: none;
+}
+
+/* =====================================
+   ANIMAÇÕES AUTOMÁTICAS
+===================================== */
+
+/*
+Os elementos aparecem automaticamente
+quando o slide recebe a classe "ativo".
+O conteúdo nunca fica permanentemente oculto.
+*/
+
+.animar {
+    opacity: 0;
+    transform: none;
+    filter: none;
+}
+
+/* TÍTULOS COM ZOOM */
+
+.slide.ativo.mostrar-conteudo .zoom {
+    animation: entradaZoom 1.1s cubic-bezier(.2,.7,.2,1) both !important;
+}
+
+/* ELEMENTOS VINDO DA ESQUERDA */
+
+.slide.ativo.mostrar-conteudo .esquerda {
+    animation: entradaEsquerda 1.05s ease-out both;
+}
+
+/* ELEMENTOS VINDO DA DIREITA */
+
+.slide.ativo.mostrar-conteudo .direita {
+    animation: entradaDireita 1.05s ease-out both;
+}
+
+/* ELEMENTOS SURGINDO DE BAIXO */
+
+.slide.ativo.mostrar-conteudo .baixo {
+    animation: entradaBaixo 1.05s ease-out both;
+}
+
+/* FADE-IN */
+
+.slide.ativo.mostrar-conteudo .fade {
+    animation: entradaFade 1.05s ease-out both;
+}
+
+@keyframes entradaZoom {
+    from {
+        opacity: 0;
+        transform: scale(.78);
+        filter: blur(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+        filter: blur(0);
+    }
+}
+
+@keyframes entradaEsquerda {
+    from {
+        opacity: 0;
+        transform: translateX(-65px);
+        filter: blur(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+        filter: blur(0);
+    }
+}
+
+@keyframes entradaDireita {
+    from {
+        opacity: 0;
+        transform: translateX(65px);
+        filter: blur(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+        filter: blur(0);
+    }
+}
+
+@keyframes entradaBaixo {
+    from {
+        opacity: 0;
+        transform: translateY(45px);
+        filter: blur(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+    }
+}
+
+@keyframes entradaFade {
+    from {
+        opacity: 0;
+        filter: blur(8px);
+    }
+
+    to {
+        opacity: 1;
+        filter: blur(0);
+    }
+}
+
+/* ATRASOS DAS ANIMAÇÕES */
+
+.delay-1 {
+    animation-delay: .1s !important;
+}
+
+.delay-2 {
+    animation-delay: .25s !important;
+}
+
+.delay-3 {
+    animation-delay: .4s !important;
+}
+
+.delay-4 {
+    animation-delay: .55s !important;
+}
+
+.delay-5 {
+    animation-delay: .7s !important;
+}
+
+.delay-6 {
+    animation-delay: .85s !important;
+}
+
+/* =====================================
+   TIPOGRAFIA
+===================================== */
+
+.centro {
+    text-align: center;
+}
+
+.tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 8px 14px;
+    margin-bottom: 18px;
+
+    border-radius: 50px;
+
+    background: rgba(139,92,246,.18);
+    border: 1px solid rgba(196,181,253,.25);
+
+    color: #ddd6fe;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+h1 {
+    font-size: clamp(70px, 12vw, 145px);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -7px;
+}
+
+h2 {
+    font-size: clamp(29px, 4vw, 49px);
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    line-height: 1.12;
+    margin-bottom: 18px;
+}
+
+h3 {
+    font-size: 19px;
+    margin-bottom: 10px;
+}
+
+p {
+    color: var(--suave);
+    font-size: clamp(14px, 1.4vw, 17px);
+    line-height: 1.65;
+}
+
+.destaque {
+    color: var(--amarelo);
+}
+
+.rosa {
+    color: #f9a8d4;
+}
+
+.descricao {
+    max-width: 720px;
+    margin-bottom: 20px;
+}
+
+.centro .descricao {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* =====================================
+   CARTÕES
+===================================== */
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.card {
+    position: relative;
+    overflow: hidden;
+
+    padding: 23px;
+    border-radius: 20px;
+
+    background: rgba(255,255,255,.065);
+    border: 1px solid rgba(255,255,255,.12);
+
+    backdrop-filter: blur(15px);
+
+    transition:
+        background .3s ease,
+        border-color .3s ease,
+        box-shadow .3s ease;
+}
+
+.card::before {
+    content: "";
+    position: absolute;
+
+    top: 0;
+    left: -100%;
+
+    width: 60%;
+    height: 100%;
+
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,255,255,.08),
+        transparent
+    );
+
+    transform: skewX(-20deg);
+    transition: left .8s ease;
+}
+
+.card:hover::before {
+    left: 150%;
+}
+
+.card:hover {
+    background: rgba(255,255,255,.11);
+    border-color: rgba(196,181,253,.5);
+    box-shadow: 0 10px 35px rgba(139,92,246,.12);
+}
+
+.card p {
+    font-size: 15px;
+}
+
+.card .icone {
+    font-size: 30px;
+    margin-bottom: 13px;
+}
+
+.card.roxo-card {
+    background: linear-gradient(
+        135deg,
+        rgba(124,58,237,.3),
+        rgba(124,58,237,.07)
+    );
+}
+
+.card.rosa-card {
+    background: linear-gradient(
+        135deg,
+        rgba(236,72,153,.25),
+        rgba(236,72,153,.05)
+    );
+}
+
+/* =====================================
+   CAPA
+===================================== */
+
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 70px;
+    height: 70px;
+
+    margin: 0 auto 20px;
+    border-radius: 22px;
+
+    background: linear-gradient(
+        135deg,
+        #7c3aed,
+        #ec4899
+    );
+
+    box-shadow: 0 12px 40px rgba(139,92,246,.4);
+
+    font-size: 32px;
+}
+
+.titulo-capa {
+    background: linear-gradient(
+        100deg,
+        #ffffff,
+        #f9a8d4,
+        #fde68a
+    );
+
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.subtitulo {
+    font-size: clamp(20px, 3vw, 33px);
+    font-weight: 750;
+    color: #f9a8d4;
+    margin: 12px 0 15px;
+}
+
+.integrantes {
+    max-width: 750px;
+    margin: 28px auto 0;
+
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+}
+
+.integrantes span {
+    padding: 8px 13px;
+
+    background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 50px;
+
+    color: #e9d5ff;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* =====================================
+   EXEMPLOS SQL
+===================================== */
+
+.codigo {
+    position: relative;
+    margin-top: 20px;
+
+    background: #0b1020;
+    border: 1px solid #334155;
+    border-radius: 18px;
+
+    overflow: hidden;
+    box-shadow: 0 15px 35px rgba(0,0,0,.2);
+}
+
+.codigo-topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 12px 17px;
+    border-bottom: 1px solid #1e293b;
+
+    color: #94a3b8;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.bolinhas {
+    display: flex;
+    gap: 5px;
+}
+
+.bolinhas span {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+}
+
+.bolinhas span:nth-child(1) {
+    background: #fb7185;
+}
+
+.bolinhas span:nth-child(2) {
+    background: #facc15;
+}
+
+.bolinhas span:nth-child(3) {
+    background: #4ade80;
+}
+
+pre {
+    padding: 20px;
+    overflow-x: auto;
+
+    font-family: Consolas, monospace;
+    font-size: clamp(13px, 1.6vw, 17px);
+    line-height: 1.8;
+
+    color: #e2e8f0;
+}
+
+.sql {
+    color: #c084fc;
+    font-weight: bold;
+}
+
+.objeto {
+    color: #fde68a;
+}
+
+.usuario {
+    color: #67e8f9;
+}
+
+/* =====================================
+   EXPLICAÇÕES
+===================================== */
+
+.explicacao {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+
+    margin-top: 18px;
+    padding: 17px 20px;
+
+    border-radius: 15px;
+
+    background: rgba(250,204,21,.08);
+    border: 1px solid rgba(250,204,21,.2);
+}
+
+.explicacao p {
+    font-size: 14px;
+}
+
+.explicacao strong {
+    color: var(--amarelo);
+}
+
+/* =====================================
+   ATIVIDADES
+===================================== */
+
+.numero-atividade {
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    color: #f9a8d4;
+    margin-bottom: 10px;
+}
+
+.alternativas {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 25px;
+}
+
+.alternativa {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+
+    width: 100%;
+    min-height: 68px;
+    padding: 15px;
+
+    text-align: left;
+    color: white;
+
+    background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 15px;
+
+    font-size: 14px;
+    line-height: 1.4;
+
+    transition:
+        background .25s ease,
+        border-color .25s ease,
+        transform .25s ease;
+}
+
+.alternativa:hover:not(:disabled) {
+    background: rgba(139,92,246,.22);
+    border-color: #a78bfa;
+    transform: translateY(-3px);
+}
+
+.letra {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    width: 33px;
+    height: 33px;
+
+    border-radius: 10px;
+    background: rgba(255,255,255,.1);
+
+    font-weight: 800;
+    color: #e9d5ff;
+}
+
+.alternativa.correta {
+    background: rgba(34,197,94,.18);
+    border-color: #4ade80;
+    animation: acertou .6s ease;
+}
+
+.alternativa.errada {
+    background: rgba(239,68,68,.18);
+    border-color: #f87171;
+    animation: errou .45s ease;
+}
+
+@keyframes acertou {
+    0%, 100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.035);
+        box-shadow: 0 0 30px rgba(74,222,128,.25);
+    }
+}
+
+@keyframes errou {
+    0%, 100% {
+        transform: translateX(0);
+    }
+
+    20%, 60% {
+        transform: translateX(-6px);
+    }
+
+    40%, 80% {
+        transform: translateX(6px);
+    }
+}
+
+.alternativa:disabled {
+    cursor: default;
+}
+
+.feedback {
+    display: none;
+
+    margin-top: 16px;
+    padding: 17px 20px;
+
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 15px;
+
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.feedback.visivel {
+    display: block;
+    animation: feedbackEntrada .6s ease both;
+}
+
+@keyframes feedbackEntrada {
+    from {
+        opacity: 0;
+        transform: translateY(25px) scale(.95);
+        filter: blur(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+/* =====================================
+   NAVEGAÇÃO
+===================================== */
+
+.navegacao {
+    position: fixed;
+    z-index: 100;
+
+    bottom: 0;
+    left: 0;
+
+    width: 100%;
+    padding: 13px 6% 17px;
+
+    background: rgba(12,8,30,.92);
+    border-top: 1px solid rgba(255,255,255,.08);
+    backdrop-filter: blur(20px);
+}
+
+.barra {
+    width: 100%;
+    height: 4px;
+
+    background: rgba(255,255,255,.1);
+    border-radius: 20px;
+
+    overflow: hidden;
+    margin-bottom: 13px;
+}
+
+.progresso {
+    height: 100%;
+    width: 10%;
+
+    border-radius: 20px;
+
+    background: linear-gradient(
+        90deg,
+        #8b5cf6,
+        #ec4899,
+        #fde68a
+    );
+
+    transition: width .6s ease;
+}
+
+.controles {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.contador {
+    font-size: 13px;
+    font-weight: 800;
+    color: #c4b5fd;
+}
+
+.botoes {
+    display: flex;
+    gap: 10px;
+}
+
+.botao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    padding: 11px 20px;
+
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 12px;
+
+    background: rgba(255,255,255,.08);
+    color: white;
+
+    font-size: 13px;
+    font-weight: 750;
+
+    transition: all .2s ease;
+}
+
+.botao:hover:not(:disabled) {
+    transform: translateY(-2px);
+    background: rgba(255,255,255,.18);
+}
+
+.botao:active:not(:disabled) {
+    transform: scale(.94);
+}
+
+.botao.primario {
+    background: linear-gradient(
+        110deg,
+        #8b5cf6,
+        #db2777
+    );
+
+    border: none;
+    box-shadow: 0 5px 20px rgba(139,92,246,.25);
+}
+
+.botao:disabled {
+    opacity: .3;
+    cursor: not-allowed;
+}
+
+/* =====================================
+   RESPONSIVIDADE
+===================================== */
+
+@media(max-width: 700px) {
+
+    .slide {
+        padding: 20px 5% 100px;
+    }
+
+    .grid {
+        gap: 10px;
+    }
+
+    .card {
+        padding: 15px;
+    }
+
+    .card p {
+        font-size: 13px;
+    }
+
+    .card h3 {
+        font-size: 16px;
+    }
+
+    .alternativas {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .alternativa {
+        min-height: 52px;
+        padding: 10px;
+        font-size: 13px;
+    }
+
+    .letra {
+        width: 28px;
+        height: 28px;
+    }
+
+    .logo {
+        width: 55px;
+        height: 55px;
+        font-size: 26px;
+    }
+
+    h1 {
+        letter-spacing: -4px;
+    }
+
+    .botao {
+        padding: 10px 12px;
+        font-size: 12px;
+    }
+
+}
+
+@media(max-width: 400px) {
+
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+/* Mantém o slide anterior saindo pela lateral, mesmo após retirar .ativo. */
+.slide.saindo-esquerda { transform: translateX(-110px) scale(.96); }
+.slide.saindo-direita { transform: translateX(110px) scale(.96); }
+/* Após cada animação, o estado final permanece visível. */
+.slide.ativo.mostrar-conteudo .animar { animation-fill-mode: both; }
+
+/* CORREÇÃO DEFINITIVA: animação explícita, sem depender de transições de visibility */
+.slide { transition: none !important; opacity: 0; visibility: hidden; pointer-events: none; transform: translateX(0); }
+.slide.ativo { visibility: visible; pointer-events: auto; opacity: 1; animation: slideChega .95s cubic-bezier(.2,.75,.2,1) both !important; }
+.slide.saindo-esquerda { visibility: visible; pointer-events: none; animation: slideSaiEsquerda .95s ease-in-out both !important; }
+.slide.saindo-direita { visibility: visible; pointer-events: none; animation: slideSaiDireita .95s ease-in-out both !important; }
+@keyframes slideChega { from { opacity: 0; transform: translateX(130px) scale(.94); } to { opacity: 1; transform: translateX(0) scale(1); } }
+@keyframes slideSaiEsquerda { from { opacity: 1; transform: translateX(0) scale(1); } to { opacity: 0; transform: translateX(-130px) scale(.94); } }
+@keyframes slideSaiDireita { from { opacity: 1; transform: translateX(0) scale(1); } to { opacity: 0; transform: translateX(130px) scale(.94); } }
+.slide.ativo .animar { opacity: 0; }
+.slide.ativo.mostrar-conteudo .zoom { animation: entradaZoom 1.15s ease-out both !important; }
+.slide.ativo.mostrar-conteudo .esquerda { animation: entradaEsquerda 1.15s ease-out both !important; }
+.slide.ativo.mostrar-conteudo .direita { animation: entradaDireita 1.15s ease-out both !important; }
+.slide.ativo.mostrar-conteudo .baixo { animation: entradaBaixo 1.15s ease-out both !important; }
+.slide.ativo.mostrar-conteudo .fade { animation: entradaFade 1.15s ease-out both !important; }
+/* Garante que os atrasos funcionem também com as regras de animação acima. */
+.slide.ativo.mostrar-conteudo .delay-1 { animation-delay: .12s !important; }
+.slide.ativo.mostrar-conteudo .delay-2 { animation-delay: .28s !important; }
+.slide.ativo.mostrar-conteudo .delay-3 { animation-delay: .44s !important; }
+.slide.ativo.mostrar-conteudo .delay-4 { animation-delay: .60s !important; }
+.slide.ativo.mostrar-conteudo .delay-5 { animation-delay: .76s !important; }
+.slide.ativo.mostrar-conteudo .delay-6 { animation-delay: .92s !important; }
+/* V4: o slide anterior se dispersa lateralmente enquanto desaparece. */
+.slide.saindo-esquerda,
+.slide.saindo-direita {
+    z-index: 3;
+    animation: dispersarSlide .95s ease-in-out both !important;
+}
+.slide.ativo { z-index: 2; }
+@keyframes dispersarSlide {
+    0% { opacity: 1; transform: translateX(0) scale(1); filter: blur(0); }
+    45% { opacity: .65; transform: translateX(0) scale(1.045); filter: blur(1px); }
+    100% { opacity: 0; transform: translateX(0) scale(1.16); filter: blur(12px); }
+}
+/* Elementos alternados se espalham em direções opostas, sem alterar a entrada do próximo slide. */
+.slide.saindo-esquerda .animar:nth-child(odd),
+.slide.saindo-direita .animar:nth-child(odd) {
+    animation: dispersarEsquerda .95s ease-in both !important;
+    animation-delay: 0s !important;
+}
+.slide.saindo-esquerda .animar:nth-child(even),
+.slide.saindo-direita .animar:nth-child(even) {
+    animation: dispersarDireita .95s ease-in both !important;
+    animation-delay: 0s !important;
+}
+@keyframes dispersarEsquerda {
+    from { opacity: 1; transform: translateX(0) scale(1); }
+    to { opacity: 0; transform: translateX(-95px) scale(.9); }
+}
+@keyframes dispersarDireita {
+    from { opacity: 1; transform: translateX(0) scale(1); }
+    to { opacity: 0; transform: translateX(95px) scale(.9); }
+}
+</style>
+</head>
+
+<body>
+
+<!-- FUNDO -->
+
+<div class="fundo">
+    <div class="orbe um"></div>
+    <div class="orbe dois"></div>
+    <div class="orbe tres"></div>
+</div>
+
+<div class="particulas" id="particulas"></div>
+
+
+<main class="apresentacao">
+
+<!-- =====================================
+     SLIDE 1 - CAPA
+===================================== -->
+
+<section class="slide ativo">
+
+<div class="conteudo centro">
+
+    <div class="logo animar zoom">
+        🗄️
+    </div>
+
+    <div class="tag animar baixo delay-1">
+        ✦ Seminário de Banco de Dados
+    </div>
+
+    <h1 class="titulo-capa animar zoom delay-2">
+        DCL.
+    </h1>
+
+    <div class="subtitulo animar esquerda delay-3">
+        Linguagem de Controle de Dados
+    </div>
+
+    <p class="animar direita delay-4">
+        Segurança, permissões e controle de acesso
+        em bancos de dados.
+    </p>
+
+    <div class="integrantes animar baixo delay-5">
+
+        <span>Enzo Gabriel</span>
+        <span>Raphaelly Beatriz</span>
+        <span>Paulo Henrique</span>
+        <span>Maxwell Eduardo</span>
+        <span>Kelsen</span>
+        <span>João Pedro</span>
+
+    </div>
+
+</div>
+
+</section>
+
+
+<!-- =====================================
+     SLIDE 2 - INTRODUÇÃO
+===================================== -->
+
+<section class="slide">
+
+<div class="conteudo">
+
+    <div class="tag animar baixo">
+        01 / Introdução
+    </div>
+
+    <h2 class="animar esquerda delay-1">
+        O que é <span class="destaque">DCL?</span>
+    </h2>
+
+    <p class="descricao animar direita delay-2">
+        DCL (Data Control Language) é a linguagem
+        utilizada para controlar permissões
+        de acesso em bancos de dados.
+    </p>
+
+    <div class="grid">
+
+        <div class="card roxo-card animar esquerda delay-3">
+
+            <div class="icone">🔐</div>
+
+            <h3>Controle de acesso</h3>
+
+            <p>
+                Define quais usuários podem
+                acessar ou modificar informações.
+            </p>
+
+        </div>
+
+        <div class="card rosa-card animar direita delay-4">
+
+            <div class="icone">🛡️</div>
+
+            <h3>Segurança dos dados</h3>
+
+            <p>
+                Ajuda a proteger informações
+                contra acessos não autorizados.
+            </p>
+
+        </div>
+
+    </div>
+
+    <div class="explicacao animar baixo delay-5">
+
+        <span>💡</span>
+
+        <p>
+            <strong>Exemplo:</strong>
+            um funcionário pode consultar os dados
+            de uma empresa sem ter permissão
+            para apagá-los.
+        </p>
+
+    </div>
+
+</div>
+
+</section>
+
+
+<!-- =====================================
+     SLIDE 3 - GRANT
+===================================== -->
+
+<section class="slide">
+
+<div class="conteudo">
+
+    <div class="tag animar baixo">
+        02 / Comando DCL
+    </div>
+
+    <h2 class="animar esquerda delay-1">
+        <span class="destaque">GRANT</span>
+        — Conceder acesso
+    </h2>
+
+    <p class="descricao animar direita delay-2">
+        O comando GRANT concede permissões
+        a usuários ou funções do banco de dados.
+    </p>
+
+    <div class="codigo animar zoom delay-3">
+
+        <div class="codigo-topo">
+
+            <div class="bolinhas">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            EXEMPLO SQL
+
+        </div>
+
+<pre><span class="sql">GRANT SELECT</span>
+<span class="sql">ON</span> <span class="objeto">clientes</span>
+<span class="sql">TO</span> <span class="usuario">joao</span>;</pre>
+
+    </div>
+
+    <div class="explicacao animar baixo delay-4">
+
+        <span>✅</span>
+
+        <p>
+            <strong>Resultado:</strong>
+            João recebe permissão para consultar
+            a tabela clientes, sem receber,
+            por esse comando, permissão
+            para alterar ou excluir registros.
+        </p>
+
+    </div>
+
+</div>
+
+</section>
+
+
+<!-- =====================================
+     SLIDE 4 - REVOKE
+===================================== -->
+
+<section class="slide">
+
+<div class="conteudo">
+
+    <div class="tag animar baixo">
+        03 / Comando DCL
+    </div>
+
+    <h2 class="animar direita delay-1">
+        <span class="rosa">REVOKE</span>
+        — Retirar acesso
+    </h2>
+
+    <p class="descricao animar esquerda delay-2">
+        O comando REVOKE revoga permissões
+        concedidas anteriormente.
+    </p>
+
+    <div class="codigo animar zoom delay-3">
+
+        <div class="codigo-topo">
+
+            <div class="bolinhas">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            EXEMPLO SQL
+
+        </div>
+
+<pre><span class="sql">REVOKE SELECT</span>
+<span class="sql">ON</span> <span class="objeto">clientes</span>
+<span class="sql">FROM</span> <span class="usuario">joao</span>;</pre>
+
+    </div>
+
+    <div class="explicacao animar baixo delay-4">
+
+        <span>🚫</span>
+
+        <p>
+            <strong>Resultado:</strong>
+            a permissão de consulta concedida
+            diretamente a João é revogada.
+            Ele ainda pode possuir acesso
+            recebido por outros meios.
+        </p>
+
+    </div>
+
+</div>
+
+</section>
+
+
+<!-- =====================================
+     SLIDE 5 - CATEGORIAS
+===================================== -->
+
+<section class="slide">
+
+<div class="conteudo">
+
+    <div class="tag animar baixo">
+        04 / Categorias e permissões
+    </div>
+
+    <h2 class="animar zoom delay-1">
+        O que podemos
+        <span class="destaque">controlar?</span>
+    </h2>
+
+    <p class="descricao animar baixo delay-2">
+        A DCL administra privilégios para
+        diferentes operações no banco de dados.
+    </p>
+
+    <div class="grid">
+
+        <div class="card animar esquerda delay-3">
+
+            <h3>👁️ SELECT</h3>
+
+            <p>Consultar informações.</p>
+
+        </div>
+
+        <div class="card animar direita delay-3">
+
+            <h3>➕ INSERT</h3>
+
+            <p>Inserir novos registros.</p>
+
+        </div>
+
+        <div class="card animar esquerda delay-4">
+
+            <h3>✏️ UPDATE</h3>
+
+            <p>Modificar registros existentes.</p>
+
+        </div>
+
+        <div class="card animar direita delay-4">
+
+            <h3>🗑️ DELETE</h3>
+
+            <p>Excluir registros.</p>
+
+        </div>
+
+    </div>
+
+    <div class="explicacao animar baixo delay-5">
+
+        <span>🔑</span>
+
+        <p>
+            <strong>Resumo:</strong>
+            GRANT concede permissões e REVOKE
+            revoga permissões. Alguns sistemas,
+            como o SQL Server, também possuem DENY
+            para negar acessos explicitamente.
+        </p>
+
+    </div>
+
+</div>
+
+</section>
+
+
+<!-- =====================================
+     SLIDE 6 - ATIVIDADE 1
+===================================== -->
+
+<section class="slide atividade">
+
+<div class="conteudo">
+
+    <div class="tag animar baixo">
+        🎯 Hora de participar
+    </div>
+
+    <div class="numero-atividade animar esquerda delay-1">
+        ATIVIDADE 01 / 04
+    </div>
+
+    <h2 class="animar zoom delay-2">
+        O que significa
+        <span class="destaque">DCL?</span>
+    </h2>
+
+    <p class="animar baixo delay-3">
+        Escolha a alternativa correta.
+    </p>
+
+    <div class="alternativas">
+
+        <button class="alternativa animar esquerda delay-3" data-correta="false">
+            <span class="letra">A</span>
+            Linguagem de Criação de Dados
+        </button>
+
+        <button class="alternativa animar direita delay-3" data-correta="true">
+            <span class="letra">B</span>
+            Linguagem de Controle de Dados
+        </button>
+
+        <button class="alternativa animar esquerda delay-4" data-correta="false">
+            <span class="letra">C</span>
+            Linguagem de Manipulação de Dados
+        </button>
+
+        <button class="alternativa animar direita delay-4" data-correta="false">
+            <span class="letra">D</span>
+            Linguagem de Consulta de Dados
+        </button>
+
+    </div>
+
+    <div class="feedback"
+    data-explicacao="DCL significa Data Control Language, ou Linguagem de Controle de Dados.">
+    </div>
+
+</div>
+
+</section>
+
+
+<!-- =====================================
+     SLIDE 7 - ATIVIDADE 2
+===================================== -->
+
+<section class="slide atividade">
+
+<div class="conteudo">
+
+    <div class="tag animar baixo">
+        🎯 Hora de participar
+    </div>
+
+    <div class="numero-atividade animar esquerda delay-1">
+        ATIVIDADE 02 / 04
+    </div>
+
+    <h2 class="animar zoom delay-2">
+        Qual comando
+        <span class="destaque">concede acesso?</span>
+    </h2>
+
+    <p class="animar baixo delay-3">
+        Um administrador deseja autorizar
+        um usuário a consultar uma tabela.
+    </p>
+
+    <div class="alternativas">
+
+        <button class="alternativa animar esquerda delay-3" data-correta="false">
+            <span class="letra">A</span>
+            REVOKE
+        </button>
+
+        <button class="alternativa animar direita delay-3" data-correta="false">
+            <span class="letra">B</span>
+            DELETE
+        </button>
+
+        <button class="alternativa animar esquerda delay-4" data-correta="true">
+            <span class="letra">C</span>
+            GRANT
+        </button>
+
+        <button class="alternativa animar direita delay-4" data-correta="false">
+            <span class="letra">D</span>
+            DROP
+        </button>
+
+    </div>
+
+    <div class="feedback"
+    data-explicacao="GRANT concede permissões. Por exemplo, GRANT SELECT permite autorizar consultas a uma tabela.">
+    </div>
+
+</div>
+
+</section>
+
+
+<!-- =====================================
+     SLIDE 8 - ATIVIDADE 3
+===================================== -->
+
+<section class="slide atividade">
+
+<div class="conteudo">
+
+    <div class="tag animar baixo">
+        🎯 Hora de participar
+    </div>
+
+    <div class="numero-atividade animar esquerda delay-1">
+        ATIVIDADE 03 / 04
+    </div>
+
+    <h2 class="animar zoom delay-2">
+        O que faz o
+        <span class="rosa">REVOKE?</span>
+    </h2>
+
+    <p class="animar baixo delay-3">
+        Observe o comando:
+    </p>
+
+    <div class="codigo animar zoom delay-3">
+
+        <div class="codigo-topo">
+
+            <div class="bolinhas">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            EXEMPLO SQL
+
+        </div>
+
+<pre><span class="sql">REVOKE INSERT</span> <span class="sql">ON</span> <span class="objeto">produtos</span> <span class="sql">FROM</span> <span class="usuario">maria</span>;</pre>
+
+    </div>
+
+    <div class="alternativas">
+
+        <button class="alternativa animar esquerda delay-4" data-correta="false">
+            <span class="letra">A</span>
+            Exclui a tabela produtos.
+        </button>
+
+        <button class="alternativa animar direita delay-4" data-correta="true">
+            <span class="letra">B</span>
+            Revoga a permissão de inserção concedida diretamente a Maria.
+        </button>
+
+        <button class="alternativa animar esquerda delay-5" data-correta="false">
+            <span class="letra">C</span>
+            Insere um novo produto.
+        </button>
+
+        <button class="alternativa animar direita delay-5" data-correta="false">
+            <span class="letra">D</span>
+            Concede acesso total a Maria.
+        </button>
+
+    </div>
+
+    <div class="feedback"
+    data-explicacao="REVOKE retira a permissão INSERT concedida diretamente a Maria sobre a tabela produtos.">
+    </div>
+
+</div>
+
+</section>
+
+
+<!-- =====================================
+     SLIDE 9 - ATIVIDADE 4
+===================================== -->
+
+<section class="slide atividade">
+
+<div class="conteudo">
+
+    <div class="tag animar baixo">
+        🎯 Desafio final
+    </div>
+
+    <div class="numero-atividade animar esquerda delay-1">
+        ATIVIDADE 04 / 04
+    </div>
+
+    <h2 class="animar zoom delay-2">
+        Qual permissão
+        <span class="destaque">utilizar?</span>
+    </h2>
+
+    <p class="animar baixo delay-3">
+        Uma funcionária precisa apenas consultar
+        os produtos de uma empresa, sem alterar
+        ou excluir informações.
+    </p>
+
+    <div class="alternativas">
+
+        <button class="alternativa animar esquerda delay-3" data-correta="false">
+            <span class="letra">A</span>
+            GRANT DELETE
+        </button>
+
+        <button class="alternativa animar direita delay-3" data-correta="false">
+            <span class="letra">B</span>
+            GRANT INSERT
+        </button>
+
+        <button class="alternativa animar esquerda delay-4" data-correta="true">
+            <span class="letra">C</span>
+            GRANT SELECT
+        </button>
+
+        <button class="alternativa animar direita delay-4" data-correta="false">
+            <span class="letra">D</span>
+            GRANT UPDATE
+        </button>
+
+    </div>
+
+    <div class="feedback"
+    data-explicacao="SELECT permite consultar informações. Conceder apenas a permissão necessária segue o princípio do menor privilégio.">
+    </div>
+
+</div>
+
+</section>
+
+
+<!-- =====================================
+     SLIDE 10 - ENCERRAMENTO
+===================================== -->
+
+<section class="slide">
+
+<div class="conteudo centro">
+
+    <div class="tag animar baixo">
+        ✦ Conclusão
+    </div>
+
+    <h2 class="animar zoom delay-1">
+        Controle de acesso.
+        <br>
+        <span class="destaque">Proteção dos dados.</span>
+    </h2>
+
+    <p class="descricao animar baixo delay-2">
+        A DCL ajuda a proteger informações,
+        garantindo que cada usuário receba
+        apenas as permissões necessárias.
+    </p>
+
+    <div class="grid">
+
+        <div class="card roxo-card animar esquerda delay-3">
+
+            <div class="icone">🔓</div>
+
+            <h3>GRANT</h3>
+
+            <p>Concede permissões.</p>
+
+        </div>
+
+        <div class="card rosa-card animar direita delay-4">
+
+            <div class="icone">🔒</div>
+
+            <h3>REVOKE</h3>
+
+            <p>Revoga permissões.</p>
+
+        </div>
+
+    </div>
+
+    <div class="explicacao animar baixo delay-5">
+
+        <span>🛡️</span>
+
+        <p>
+            <strong>Mensagem final:</strong>
+            controlar quem pode acessar os dados
+            é uma parte fundamental da segurança
+            de um banco de dados.
+        </p>
+
+    </div>
+
+    <button
+        class="botao primario animar fade delay-6"
+        style="margin-top:22px;"
+        onclick="reiniciar()">
+
+        ↻ Reiniciar apresentação
+
+    </button>
+
+</div>
+
+</section>
+
+</main>
+
+
+<!-- =====================================
+     BARRA DE NAVEGAÇÃO
+===================================== -->
+
+<footer class="navegacao">
+
+    <div class="barra">
+        <div class="progresso" id="progresso"></div>
+    </div>
+
+    <div class="controles">
+
+        <div class="contador" id="contador">
+            01 / 10
+        </div>
+
+        <div class="botoes">
+
+            <button
+                class="botao"
+                id="anterior"
+                onclick="mudarSlide(-1)">
+
+                ← Anterior
+
+            </button>
+
+            <button
+                class="botao primario"
+                id="proximo"
+                onclick="mudarSlide(1)">
+
+                Próximo →
+
+            </button>
+
+        </div>
+
+    </div>
+
+</footer>
+
+
+<script>
+
+/* =====================================
+   VARIÁVEIS
+===================================== */
+
+const slides = document.querySelectorAll(".slide");
+
+const contador = document.getElementById("contador");
+
+const progresso = document.getElementById("progresso");
+
+const anterior = document.getElementById("anterior");
+
+const proximo = document.getElementById("proximo");
+
+let atual = 0;
+
+let animando = false;
+
+const duracao = 1000;
+const atrasoConteudo = 720;
+
+
+/* =====================================
+   PARTÍCULAS
+===================================== */
+
+const containerParticulas =
+    document.getElementById("particulas");
+
+for (let i = 0; i < 28; i++) {
+
+    const particula = document.createElement("span");
+
+    particula.classList.add("particula");
+
+    particula.style.left = Math.random() * 100 + "%";
+
+    particula.style.animationDuration =
+        (8 + Math.random() * 12) + "s";
+
+    particula.style.animationDelay =
+        (-Math.random() * 20) + "s";
+
+    const tamanho = 2 + Math.random() * 4;
+
+    particula.style.width = tamanho + "px";
+
+    particula.style.height = tamanho + "px";
+
+    containerParticulas.appendChild(particula);
+
+}
+
+
+/* =====================================
+   NAVEGAÇÃO
+===================================== */
+
+function atualizarNavegacao() {
+
+    const numero = String(atual + 1).padStart(2, "0");
+
+    const total = String(slides.length).padStart(2, "0");
+
+    contador.textContent = numero + " / " + total;
+
+    progresso.style.width =
+        ((atual + 1) / slides.length * 100) + "%";
+
+    anterior.disabled = atual === 0 || animando;
+
+    proximo.disabled =
+        atual === slides.length - 1 || animando;
+
+    proximo.textContent =
+        atual === slides.length - 1
+        ? "Fim ✓"
+        : "Próximo →";
+
+}
+
+
+/* =====================================
+   TRANSIÇÕES ENTRE SLIDES
+===================================== */
+
+function mudarSlide(direcao) {
+    if (animando) return;
+    const destino = atual + direcao;
+    if (destino < 0 || destino >= slides.length) return;
+    animando = true;
+    const antigo = slides[atual];
+    const novo = slides[destino];
+    const saida = direcao > 0 ? "saindo-esquerda" : "saindo-direita";
+    novo.classList.remove("ativo", "mostrar-conteudo", "saindo-esquerda", "saindo-direita");
+    novo.querySelector(".conteudo").scrollTop = 0;
+    antigo.classList.remove("ativo");
+    antigo.classList.add(saida);
+    // Reinicia a animação do slide novo mesmo quando ele já foi visitado.
+    void novo.offsetWidth;
+    novo.classList.add("ativo");
+    atual = destino;
+    atualizarNavegacao();
+    setTimeout(() => novo.classList.add("mostrar-conteudo"), 980);
+    setTimeout(() => {
+        antigo.classList.remove(saida, "mostrar-conteudo");
+        animando = false;
+        atualizarNavegacao();
+    }, 1000);
+}
+
+
+/* =====================================
+   REINICIAR
+===================================== */
+
+function reiniciar() {
+
+    if (animando) return;
+
+    slides.forEach(slide => {
+
+        slide.querySelectorAll(".alternativa").forEach(botao => {
+
+            botao.disabled = false;
+
+            botao.classList.remove("correta", "errada");
+
+        });
+
+        slide.querySelectorAll(".feedback").forEach(feedback => {
+
+            feedback.classList.remove("visivel");
+
+            feedback.textContent = "";
+
+        });
+
+    });
+
+    if (atual !== 0) {
+        slides[atual].classList.remove("ativo", "mostrar-conteudo");
+        slides[0].classList.add("ativo");
+        atual = 0;
+    }
+    slides[0].classList.remove("mostrar-conteudo");
+    void slides[0].offsetWidth;
+    setTimeout(() => slides[0].classList.add("mostrar-conteudo"), 980);
+    atualizarNavegacao();
+
+}
+
+
+/* =====================================
+   CONTROLES PELO TECLADO
+===================================== */
+
+document.addEventListener("keydown", evento => {
+
+    if (
+        evento.key === "ArrowRight" ||
+        evento.key === "PageDown"
+    ) {
+
+        evento.preventDefault();
+
+        mudarSlide(1);
+
+    }
+
+    if (
+        evento.key === "ArrowLeft" ||
+        evento.key === "PageUp"
+    ) {
+
+        evento.preventDefault();
+
+        mudarSlide(-1);
+
+    }
+
+});
+
+
+/* =====================================
+   ATIVIDADES INTERATIVAS
+===================================== */
+
+const atividades =
+    document.querySelectorAll(".atividade");
+
+atividades.forEach(atividade => {
+
+    const alternativas =
+        atividade.querySelectorAll(".alternativa");
+
+    const feedback =
+        atividade.querySelector(".feedback");
+
+    alternativas.forEach(alternativa => {
+
+        alternativa.addEventListener("click", () => {
+
+            if (feedback.classList.contains("visivel")) {
+                return;
+            }
+
+            const acertou =
+                alternativa.dataset.correta === "true";
+
+            alternativas.forEach(botao => {
+
+                botao.disabled = true;
+
+                if (botao.dataset.correta === "true") {
+
+                    botao.classList.add("correta");
+
+                }
+
+            });
+
+            if (!acertou) {
+
+                alternativa.classList.add("errada");
+
+            }
+
+            const mensagem = acertou
+                ? "🎉 Resposta correta! "
+                : "❌ Resposta incorreta! ";
+
+            feedback.textContent =
+                mensagem + feedback.dataset.explicacao;
+
+            feedback.classList.add("visivel");
+
+            feedback.scrollIntoView({
+                behavior: "smooth",
+                block: "nearest"
+            });
+
+        });
+
+    });
+
+});
+
+
+/* =====================================
+   INICIALIZAÇÃO
+===================================== */
+
+atualizarNavegacao();
+// A capa também recebe a animação automaticamente ao abrir a página.
+setTimeout(() => slides[0].classList.add("mostrar-conteudo"), 980);
+
+</script>
+
+</body>
+</html>
