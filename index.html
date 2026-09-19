@@ -1148,7 +1148,6 @@ pre {
         <span>Paulo Henrique</span>
         <span>Maxwell Eduardo</span>
         <span>Kelsen</span>
-        <span>João Pedro</span>
 
     </div>
 
@@ -1265,7 +1264,7 @@ pre {
 
 <pre><span class="sql">GRANT SELECT</span>
 <span class="sql">ON</span> <span class="objeto">clientes</span>
-<span class="sql">TO</span> <span class="usuario">joao</span>;</pre>
+<span class="sql">TO</span> <span class="usuario">enzo</span>;</pre>
 
     </div>
 
@@ -1275,7 +1274,7 @@ pre {
 
         <p>
             <strong>Resultado:</strong>
-            João recebe permissão para consultar
+            Enzo recebe permissão para consultar
             a tabela clientes, sem receber,
             por esse comando, permissão
             para alterar ou excluir registros.
@@ -1326,7 +1325,7 @@ pre {
 
 <pre><span class="sql">REVOKE SELECT</span>
 <span class="sql">ON</span> <span class="objeto">clientes</span>
-<span class="sql">FROM</span> <span class="usuario">joao</span>;</pre>
+<span class="sql">FROM</span> <span class="usuario">enzo</span>;</pre>
 
     </div>
 
@@ -1337,7 +1336,7 @@ pre {
         <p>
             <strong>Resultado:</strong>
             a permissão de consulta concedida
-            diretamente a João é revogada.
+            diretamente a Enzo é revogada.
             Ele ainda pode possuir acesso
             recebido por outros meios.
         </p>
@@ -1582,7 +1581,7 @@ pre {
 
         </div>
 
-<pre><span class="sql">REVOKE INSERT</span> <span class="sql">ON</span> <span class="objeto">produtos</span> <span class="sql">FROM</span> <span class="usuario">maria</span>;</pre>
+<pre><span class="sql">REVOKE INSERT</span> <span class="sql">ON</span> <span class="objeto">produtos</span> <span class="sql">FROM</span> <span class="usuario">raphaelly</span>;</pre>
 
     </div>
 
@@ -1595,7 +1594,7 @@ pre {
 
         <button class="alternativa animar direita delay-4" data-correta="true">
             <span class="letra">B</span>
-            Revoga a permissão de inserção concedida diretamente a Maria.
+            Revoga a permissão de inserção concedida diretamente a Raphaelly.
         </button>
 
         <button class="alternativa animar esquerda delay-5" data-correta="false">
@@ -1605,13 +1604,13 @@ pre {
 
         <button class="alternativa animar direita delay-5" data-correta="false">
             <span class="letra">D</span>
-            Concede acesso total a Maria.
+            Concede acesso total a Raphaelly.
         </button>
 
     </div>
 
     <div class="feedback"
-    data-explicacao="REVOKE retira a permissão INSERT concedida diretamente a Maria sobre a tabela produtos.">
+    data-explicacao="REVOKE retira a permissão INSERT concedida diretamente a Raphaelly sobre a tabela produtos.">
     </div>
 
 </div>
